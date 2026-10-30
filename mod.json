@@ -1,0 +1,79 @@
+{
+	"geode": "4.0.0",
+	"gd": {
+		"win": "2.2081",
+		"android": "2.2081",
+		"mac": "2.2081",
+		"ios": "2.2081"
+	},
+	"id": "yourname.spam-assist",
+	"name": "Spam Assist",
+	"version": "v1.0.0",
+	"developer": "yourname",
+	"description": "Smooths out straight fly (ship) and wave spam. Matches your CPS and fills in clicks to keep it even.",
+	"settings": {
+		"enabled": {
+			"type": "bool",
+			"name": "Enabled",
+			"default": true
+		},
+		"practice-only": {
+			"type": "bool",
+			"name": "Practice / test mode only",
+			"description": "Only assist in practice mode or testmode. Turn off at your own risk: injected clicks on normal runs count as cheating on most leaderboards.",
+			"default": true
+		},
+		"ship-threshold": {
+			"type": "float",
+			"name": "Ship smoothing starts at (CPS)",
+			"default": 6.0,
+			"min": 2.0,
+			"max": 30.0,
+			"control": { "input": true, "slider": true }
+		},
+		"wave-threshold": {
+			"type": "float",
+			"name": "Wave smoothing starts at (CPS)",
+			"default": 9.0,
+			"min": 2.0,
+			"max": 30.0,
+			"control": { "input": true, "slider": true }
+		},
+		"matched-cps": {
+			"type": "bool",
+			"name": "Matched CPS (adapt to my spam speed)",
+			"default": true
+		},
+		"speed-boost": {
+			"type": "float",
+			"name": "Speed multiplier",
+			"description": "1.0 = same speed as you. Above 1 makes the assist a bit faster than your real spam.",
+			"default": 1.0,
+			"min": 0.8,
+			"max": 1.5,
+			"control": { "input": true, "slider": true }
+		},
+		"max-cps": {
+			"type": "float",
+			"name": "Max CPS",
+			"default": 16.0,
+			"min": 6.0,
+			"max": 30.0,
+			"control": { "input": true, "slider": true }
+		},
+		"humanize": {
+			"type": "float",
+			"name": "Humanization (timing jitter %)",
+			"description": "0 = perfectly even clicks.",
+			"default": 0.0,
+			"min": 0.0,
+			"max": 15.0,
+			"control": { "input": true, "slider": true }
+		},
+		"show-label": {
+			"type": "bool",
+			"name": "Show CPS label",
+			"default": true
+		}
+	}
+}
