@@ -12,6 +12,7 @@ namespace {
 	constexpr ToggleDef kToggles[] = {
 		{"enabled",       "Assist enabled"},
 		{"practice-only", "Practice / test only"},
+		{"follow-direction", "Follow my direction"},
 		{"matched-cps",   "Matched CPS"},
 		{"show-label",    "Show CPS label"},
 	};
@@ -21,6 +22,7 @@ namespace {
 		{"ship-threshold", "Ship starts at (CPS)", 1.0,  2.0, 30.0, 0},
 		{"wave-threshold", "Wave starts at (CPS)", 1.0,  2.0, 30.0, 0},
 		{"max-cps",        "Max CPS",              1.0,  6.0, 30.0, 0},
+		{"steer-strength", "Steering strength",    0.1,  0.5, 2.5,  1},
 		{"speed-boost",    "Speed multiplier",     0.05, 0.8, 1.5,  2},
 		{"humanize",       "Humanization %",       1.0,  0.0, 15.0, 0},
 	};
@@ -48,8 +50,8 @@ protected:
 
 		auto size = m_mainLayer->getContentSize();
 		float W = size.width, H = size.height;
-		float y = H - 52.f;
-		float const row = 24.f;
+		float y = H - 44.f;
+		float const row = 17.f;
 
 		// toggles
 		for (int i = 0; i < (int)std::size(kToggles); i++, y -= row) {
@@ -60,7 +62,7 @@ protected:
 			m_mainLayer->addChild(lbl);
 
 			auto tog = CCMenuItemToggler::createWithStandardSprites(
-				this, menu_selector(AssistMenu::onToggle), 0.6f);
+				this, menu_selector(AssistMenu::onToggle), 0.45f);
 			tog->setTag(i);
 			tog->toggle(Mod::get()->getSettingValue<bool>(kToggles[i].id));
 			tog->setPosition({W - 32.f, y});
@@ -77,7 +79,7 @@ protected:
 			m_mainLayer->addChild(lbl);
 
 			auto minus = CCMenuItemSpriteExtra::create(
-				ButtonSprite::create("-", "bigFont.fnt", "GJ_button_04.png", 0.6f),
+				ButtonSprite::create("-", "bigFont.fnt", "GJ_button_04.png", 0.45f),
 				this, menu_selector(AssistMenu::onMinus));
 			minus->setTag(i);
 			minus->setPosition({W - 98.f, y});
@@ -91,7 +93,7 @@ protected:
 			m_values[i] = val;
 
 			auto plus = CCMenuItemSpriteExtra::create(
-				ButtonSprite::create("+", "bigFont.fnt", "GJ_button_04.png", 0.6f),
+				ButtonSprite::create("+", "bigFont.fnt", "GJ_button_04.png", 0.45f),
 				this, menu_selector(AssistMenu::onPlus));
 			plus->setTag(i);
 			plus->setPosition({W - 26.f, y});
@@ -99,8 +101,8 @@ protected:
 		}
 
 		// keybind button
-		y -= 6.f;
-		m_keySpr = ButtonSprite::create("", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+		y -= 4.f;
+		m_keySpr = ButtonSprite::create("", "bigFont.fnt", "GJ_button_01.png", 0.4f);
 		auto keyBtn = CCMenuItemSpriteExtra::create(
 			m_keySpr, this, menu_selector(AssistMenu::onBindKey));
 		keyBtn->setPosition({W / 2.f, y});
@@ -148,7 +150,7 @@ public:
 
 	static AssistMenu* create() {
 		auto ret = new AssistMenu();
-		if (ret->Popup::init(330.f, 310.f) && ret->setupMenu()) {
+		if (ret->Popup::init(330.f, 275.f) && ret->setupMenu()) {
 			ret->autorelease();
 			return ret;
 		}
