@@ -20,6 +20,8 @@ namespace assist {
 		bool injecting = false;       // true while WE send a click
 		int mode = 0;                 // 0 none, 1 ship, 2 wave
 		double targetCps = 0;
+		double emaDown = 0;           // avg time you hold the button
+		double emaUp = 0;             // avg time you release it
 	};
 	inline State S;
 
@@ -86,10 +88,11 @@ namespace assist {
 		}
 
 		double thr = threshold(mode);
-		double timeout = std::max(0.2, 1.6 / std::max(S.cps, 1.0));
+		// holding (or releasing) longer than ~2.5 spam half-periods hands control back to you
+		double timeout = std::clamp(1.25 / std::max(S.cps, 1.0), 0.09, 0.2);
 		bool stale = (S.now - S.lastRealEvent) > timeout;
 
-		if (stale) { S.cps = 0; S.presses.clear(); }
+		if (stale) { S.cps = 0; S.presses.clear(); S.emaDown = 0; S.emaUp = 0; }
 
 		if (!S.active) {
 			if (mode != 0 && !stale && S.cps >= thr) {
@@ -110,10 +113,21 @@ namespace assist {
 		tc = std::clamp(tc, thr, getD("max-cps"));
 		S.targetCps = tc;
 
-		double half = 0.5 / tc;
+		// duty = fraction of each click the button is held down.
+		// 0.5 = straight wave. Following your direction keeps your up/down bias.
+		double duty = 0.5;
+		if (getB("follow-direction") && S.emaDown > 0 && S.emaUp > 0) {
+			duty = S.emaDown / (S.emaDown + S.emaUp);
+			duty = 0.5 + (duty - 0.5) * getD("steer-strength");
+			if (std::abs(duty - 0.5) < 0.03) duty = 0.5; // tiny bias stays straight
+			duty = std::clamp(duty, 0.08, 0.92);
+		}
+
+		double period = 1.0 / tc;
+		double half = (S.outDown ? duty : 1.0 - duty) * period;
 		half *= 1.0 + jitter() * (getD("humanize") / 100.0);
 
-		if (S.now - S.lastToggle >= half) {
+		if (!halfTick && S.now - S.lastToggle >= half) {
 			// don't try to catch up on a big backlog, just resync
 			S.lastToggle = (S.now - S.lastToggle > half * 3) ? S.now : S.lastToggle + half;
 			sendOut(l, !S.outDown);
@@ -135,6 +149,12 @@ class $modify(AssistLayer, GJBaseGameLayer) {
 		}
 
 		// real player input
+		double gap = S.now - S.lastRealEvent;
+		if (gap > 0 && gap < 0.3) {
+			// a press ends a "up" period, a release ends a "down" period
+			double& ema = down ? S.emaUp : S.emaDown;
+			ema = ema > 0 ? ema * 0.5 + gap * 0.5 : gap;
+		}
 		S.realDown = down;
 		S.lastRealEvent = S.now;
 		if (down) recordPress();
