@@ -5,6 +5,8 @@
 
 using namespace geode::prelude;
 
+class AssistMenu;
+
 namespace {
 	struct ToggleDef { char const* id; char const* name; };
 	constexpr ToggleDef kToggles[] = {
@@ -23,7 +25,6 @@ namespace {
 		{"humanize",       "Humanization %",       1.0,  0.0, 15.0, 0},
 	};
 
-	class AssistMenu;
 	AssistMenu* g_menu = nullptr;
 	bool g_capturing = false;
 
@@ -41,8 +42,7 @@ protected:
 		return fmt::format("{:.{}f}", v, d.decimals);
 	}
 
-	bool init() {
-		if (!Popup::init(330.f, 310.f)) return false;
+	bool setupMenu() {
 		g_menu = this;
 		this->setTitle("Spam Assist");
 
@@ -148,7 +148,7 @@ public:
 
 	static AssistMenu* create() {
 		auto ret = new AssistMenu();
-		if (ret->init()) {
+		if (ret->Popup::init(330.f, 310.f) && ret->setupMenu()) {
 			ret->autorelease();
 			return ret;
 		}
