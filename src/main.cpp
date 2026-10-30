@@ -76,8 +76,8 @@ namespace assist {
 	}
 
 	// runs once per physics step, before the game processes input
-	inline void tick(GJBaseGameLayer* l, float dt) {
-		S.now += dt;
+	inline void tick(GJBaseGameLayer* l, float dt, bool halfTick) {
+		if (!halfTick) S.now += dt;
 		int mode = currentMode(l);
 
 		if (!allowed(l)) {
@@ -122,9 +122,9 @@ namespace assist {
 }
 
 class $modify(AssistLayer, GJBaseGameLayer) {
-	void processCommands(float dt) {
-		assist::tick(this, dt);
-		GJBaseGameLayer::processCommands(dt);
+	void processCommands(float dt, bool isHalfTick, bool isLastTick) {
+		assist::tick(this, dt, isHalfTick);
+		GJBaseGameLayer::processCommands(dt, isHalfTick, isLastTick);
 	}
 
 	void handleButton(bool down, int button, bool isPlayer1) {
