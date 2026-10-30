@@ -23,6 +23,7 @@ namespace {
 		{"wave-threshold", "Wave starts at (CPS)", 1.0,  2.0, 30.0, 0},
 		{"max-cps",        "Max CPS",              1.0,  6.0, 30.0, 0},
 		{"steer-strength", "Steering strength",    0.1,  0.5, 2.5,  1},
+		{"stop-delay",     "Stop delay",           0.1,  1.1, 3.0,  1},
 		{"speed-boost",    "Speed multiplier",     0.05, 0.8, 1.5,  2},
 		{"humanize",       "Humanization %",       1.0,  0.0, 15.0, 0},
 	};
@@ -150,7 +151,7 @@ public:
 
 	static AssistMenu* create() {
 		auto ret = new AssistMenu();
-		if (ret->Popup::init(330.f, 275.f) && ret->setupMenu()) {
+		if (ret->Popup::init(330.f, 292.f) && ret->setupMenu()) {
 			ret->autorelease();
 			return ret;
 		}
