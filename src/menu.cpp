@@ -32,7 +32,7 @@ namespace {
 	}
 }
 
-class AssistMenu : public geode::Popup<> {
+class AssistMenu : public geode::Popup {
 protected:
 	CCLabelBMFont* m_values[std::size(kSteps)] = {};
 	ButtonSprite* m_keySpr = nullptr;
@@ -41,7 +41,8 @@ protected:
 		return fmt::format("{:.{}f}", v, d.decimals);
 	}
 
-	bool setup() override {
+	bool init() {
+		if (!Popup::init(330.f, 310.f)) return false;
 		g_menu = this;
 		this->setTitle("Spam Assist");
 
@@ -147,7 +148,7 @@ public:
 
 	static AssistMenu* create() {
 		auto ret = new AssistMenu();
-		if (ret->initAnchored(330.f, 310.f)) {
+		if (ret->init()) {
 			ret->autorelease();
 			return ret;
 		}
