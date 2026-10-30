@@ -39,6 +39,21 @@
 			"max": 30.0,
 			"control": { "input": true, "slider": true }
 		},
+		"follow-direction": {
+			"type": "bool",
+			"name": "Follow my direction (steer while spamming)",
+			"description": "On: if you spam with longer holds (up) or longer releases (down), the assist keeps that slope. Off: always forces a straight wave.",
+			"default": true
+		},
+		"steer-strength": {
+			"type": "float",
+			"name": "Steering strength",
+			"description": "How strongly your hold length turns into a slope. 1.0 = same slope as your spam. Higher = steeper.",
+			"default": 1.0,
+			"min": 0.5,
+			"max": 2.5,
+			"control": { "input": true, "slider": true }
+		},
 		"matched-cps": {
 			"type": "bool",
 			"name": "Matched CPS (adapt to my spam speed)",
