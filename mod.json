@@ -54,6 +54,15 @@
 			"max": 2.5,
 			"control": { "input": true, "slider": true }
 		},
+		"stop-delay": {
+			"type": "float",
+			"name": "Stop delay (x your spam gap)",
+			"description": "How long the assist waits after you stop before giving control back. Lower = stops faster, but may drop out if your spam is uneven.",
+			"default": 1.5,
+			"min": 1.1,
+			"max": 3.0,
+			"control": { "input": true, "slider": true }
+		},
 		"matched-cps": {
 			"type": "bool",
 			"name": "Matched CPS (adapt to my spam speed)",
