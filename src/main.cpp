@@ -88,8 +88,12 @@ namespace assist {
 		}
 
 		double thr = threshold(mode);
-		// holding (or releasing) longer than ~2.5 spam half-periods hands control back to you
-		double timeout = std::clamp(1.25 / std::max(S.cps, 1.0), 0.09, 0.2);
+		// stop as soon as you've gone quiet: wait only ~1.5x your own spam gap
+		// (hold gap if the button is down, release gap if it's up)
+		double ref = S.realDown ? S.emaDown : S.emaUp;
+		double timeout = ref > 0
+			? std::clamp(ref * getD("stop-delay"), 0.05, 0.2)
+			: std::clamp(1.25 / std::max(S.cps, 1.0), 0.09, 0.2);
 		bool stale = (S.now - S.lastRealEvent) > timeout;
 
 		if (stale) { S.cps = 0; S.presses.clear(); S.emaDown = 0; S.emaUp = 0; }
