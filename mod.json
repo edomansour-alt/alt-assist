@@ -98,6 +98,24 @@
 			"type": "bool",
 			"name": "Show CPS label",
 			"default": true
+		},
+		"steer-deadzone": {
+			"type": "float",
+			"name": "Straight zone (hold/release balance)",
+			"description": "How far your hold/release balance can drift from 50/50 before the assist starts steering. Smaller = reacts to slighter bias.",
+			"default": 0.10,
+			"min": 0.0,
+			"max": 0.3,
+			"control": { "input": true, "slider": true }
+		},
+		"steer-window": {
+			"type": "int",
+			"name": "Steering memory (clicks)",
+			"description": "How many recent clicks are averaged to read your hold/release balance. Lower = faster to react but twitchier.",
+			"default": 6,
+			"min": 3,
+			"max": 12,
+			"control": { "input": true, "slider": true }
 		}
 	}
 }
