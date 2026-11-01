@@ -3,7 +3,9 @@
 #include <Geode/modify/PlayLayer.hpp>
 #include <deque>
 #include <algorithm>
+#include <cmath>
 #include <random>
+#include "SteerEstimator.hpp"
 
 using namespace geode::prelude;
 
@@ -20,13 +22,24 @@ namespace assist {
 		bool injecting = false;       // true while WE send a click
 		int mode = 0;                 // 0 none, 1 ship, 2 wave
 		double targetCps = 0;
-		double emaDown = 0;           // avg time you hold the button
-		double emaUp = 0;             // avg time you release it
+		double emaDown = 0;           // avg time you hold the button (used for the stop timeout)
+		double emaUp = 0;             // avg time you release it (used for the stop timeout)
+		spam::SteerEstimator steer;   // reads your hold/release balance -> slope
 	};
 	inline State S;
 
 	inline double getD(char const* k) { return Mod::get()->getSettingValue<double>(k); }
 	inline bool getB(char const* k) { return Mod::get()->getSettingValue<bool>(k); }
+	inline int64_t getI(char const* k) { return Mod::get()->getSettingValue<int64_t>(k); }
+
+	inline spam::SteerConfig steerConfig() {
+		spam::SteerConfig c;
+		c.deadzone = static_cast<float>(getD("steer-deadzone"));
+		c.strength = static_cast<float>(getD("steer-strength"));
+		c.window = static_cast<int>(getI("steer-window"));
+		c.maxSlope = 0.84f; // same limit as the old 0.08..0.92 duty clamp
+		return c;
+	}
 
 	inline double jitter() {
 		static std::mt19937 rng{std::random_device{}()};
@@ -96,7 +109,10 @@ namespace assist {
 			: std::clamp(1.25 / std::max(S.cps, 1.0), 0.09, 0.2);
 		bool stale = (S.now - S.lastRealEvent) > timeout;
 
-		if (stale) { S.cps = 0; S.presses.clear(); S.emaDown = 0; S.emaUp = 0; }
+		if (stale) {
+			S.cps = 0; S.presses.clear(); S.emaDown = 0; S.emaUp = 0;
+			S.steer.reset();
+		}
 
 		if (!S.active) {
 			if (mode != 0 && !stale && S.cps >= thr) {
@@ -118,12 +134,13 @@ namespace assist {
 		S.targetCps = tc;
 
 		// duty = fraction of each click the button is held down.
-		// 0.5 = straight wave. Following your direction keeps your up/down bias.
+		// 0.5 = straight wave, above 0.5 climbs, below 0.5 dives.
+		// The slope comes from the steer estimator: it averages your hold/release
+		// balance over your last few clicks and ignores small bias (the deadzone).
 		double duty = 0.5;
-		if (getB("follow-direction") && S.emaDown > 0 && S.emaUp > 0) {
-			duty = S.emaDown / (S.emaDown + S.emaUp);
-			duty = 0.5 + (duty - 0.5) * getD("steer-strength");
-			if (std::abs(duty - 0.5) < 0.03) duty = 0.5; // tiny bias stays straight
+		if (getB("follow-direction")) {
+			S.steer.setConfig(steerConfig()); // pick up setting changes live
+			duty = 0.5 + 0.5 * static_cast<double>(S.steer.slope());
 			duty = std::clamp(duty, 0.08, 0.92);
 		}
 
@@ -162,6 +179,14 @@ class $modify(AssistLayer, GJBaseGameLayer) {
 		S.realDown = down;
 		S.lastRealEvent = S.now;
 		if (down) recordPress();
+
+		// feed the steering estimator with the REAL press/release timing
+		if (down) {
+			S.steer.setConfig(steerConfig());
+			S.steer.onPress(S.now);
+		} else {
+			S.steer.onRelease(S.now);
+		}
 
 		// while assisting, the scheduler owns the output; real clicks only feed the CPS meter
 		if (S.active && allowed(this)) return;
@@ -206,8 +231,10 @@ class $modify(AssistPlayLayer, PlayLayer) {
 		}
 		label->setVisible(true);
 		if (assist::S.active) {
-			label->setString(fmt::format("SPAM ASSIST {:.1f} CPS | {}",
-				assist::S.targetCps, assist::S.mode == 2 ? "WAVE" : "SHIP").c_str());
+			float sl = assist::S.steer.slope();
+			char const* dir = std::abs(sl) < 0.05f ? "STRAIGHT" : (sl > 0.f ? "UP" : "DOWN");
+			label->setString(fmt::format("SPAM ASSIST {:.1f} CPS | {} | {} ({:+.2f})",
+				assist::S.targetCps, assist::S.mode == 2 ? "WAVE" : "SHIP", dir, sl).c_str());
 		} else {
 			label->setString(fmt::format("SPAM ASSIST idle ({:.0f} CPS)", assist::S.cps).c_str());
 		}
